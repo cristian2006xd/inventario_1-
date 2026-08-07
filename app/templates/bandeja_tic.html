@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% block titulo %}Bandeja TIC | INAMHI{% endblock %}
+{% block contenido %}
+
+<h4 class="mb-3"><i class="bi bi-clipboard-check"></i> Bandeja de Revisión TIC</h4>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card kpi-card p-3" style="background-color:#f39c12;">
+            <div class="small">Pendientes</div>
+            <div class="fs-3 fw-bold">{{ kpi_pendientes }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card kpi-card p-3" style="background-color:#e74c3c;">
+            <div class="small">Observados</div>
+            <div class="fs-3 fw-bold">{{ kpi_observados }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card kpi-card p-3" style="background-color:#27ae60;">
+            <div class="small">Aprobados</div>
+            <div class="fs-3 fw-bold">{{ kpi_aprobados }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card kpi-card p-3" style="background-color:#2c3e50;">
+            <div class="small">Total</div>
+            <div class="fs-3 fw-bold">{{ kpi_total }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('tic.bandeja') }}" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <input type="text" class="form-control" name="q" value="{{ termino }}"
+                       placeholder="Buscar por código, bien, custodio o usuario registro...">
+            </div>
+            <div class="col-md-3">
+                <select name="estado" class="form-select">
+                    <option value="TODOS" {% if not estado_filtro %}selected{% endif %}>Todos los estados</option>
+                    <option value="En Revisión" {% if estado_filtro == 'En Revisión' %}selected{% endif %}>En Revisión</option>
+                    <option value="Observado" {% if estado_filtro == 'Observado' %}selected{% endif %}>Observado</option>
+                    <option value="Aprobado" {% if estado_filtro == 'Aprobado' %}selected{% endif %}>Aprobado</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-search"></i> Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Código del Bien</th>
+                    <th>Bien</th>
+                    <th>Custodio Actual</th>
+                    <th>Usuario Registro</th>
+                    <th>Estado</th>
+                    <th>Observaciones TIC</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for bien in bienes %}
+                    <tr>
+                        <td>{{ bien.codigo_bien }}</td>
+                        <td>{{ bien.bien or '-' }}</td>
+                        <td>{{ bien.custodio_actual or '-' }}</td>
+                        <td>{{ bien.usuario_registro or '-' }}</td>
+                        <td>{{ macros.badge_estado(bien.estado) }}</td>
+                        <td class="small text-muted">{{ bien.observaciones_tic or '-' }}</td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal"
+                                    data-bs-target="#modalAprobar-{{ loop.index }}">
+                                <i class="bi bi-check-lg"></i> Aprobar
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#modalObservar-{{ loop.index }}">
+                                <i class="bi bi-exclamation-triangle"></i> Observar
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Modal Aprobar -->
+                    <div class="modal fade" id="modalAprobar-{{ loop.index }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="POST" action="{{ url_for('tic.aprobar', codigo=bien.codigo_bien) }}">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Aprobar bien {{ bien.codigo_bien }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <label class="form-label">Nota (opcional)</label>
+                                        <textarea class="form-control" name="nota" rows="3"></textarea>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-success">Confirmar Aprobación</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Observar -->
+                    <div class="modal fade" id="modalObservar-{{ loop.index }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form method="POST" action="{{ url_for('tic.observar', codigo=bien.codigo_bien) }}">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Observar bien {{ bien.codigo_bien }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <label class="form-label">Motivo <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" name="motivo" rows="3" required></textarea>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-danger">Confirmar Observación</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">No hay bienes que coincidan con el filtro.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

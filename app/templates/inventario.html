@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% block titulo %}Inventario | INAMHI{% endblock %}
+{% block contenido %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h4 class="mb-0"><i class="bi bi-box-seam"></i> Inventario de Bienes</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('inventario.exportar', q=termino) }}" class="btn btn-outline-success">
+            <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+        </a>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoRegistro">
+            <i class="bi bi-plus-lg"></i> Nuevo Registro
+        </button>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('inventario.listar') }}" class="row g-2 align-items-center">
+            <div class="col-md-8">
+                <input type="text" class="form-control" name="q" value="{{ termino }}"
+                       placeholder="Buscar por Código del Bien, Bien, Estado, Custodio o Usuario Registro...">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-search"></i> Buscar</button>
+            </div>
+            {% if termino %}
+            <div class="col-md-2">
+                <a href="{{ url_for('inventario.listar') }}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-x-circle"></i> Limpiar
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Código del Bien</th>
+                    <th>Bien</th>
+                    <th>Estado Bien</th>
+                    <th>Custodio Actual</th>
+                    <th>Usuario Registro</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for bien in bienes %}
+                    <tr>
+                        <td>{{ bien.codigo_bien }}</td>
+                        <td>{{ bien.bien or '-' }}</td>
+                        <td>{{ bien.estado_bien or '-' }}</td>
+                        <td>{{ bien.custodio_actual or '-' }}</td>
+                        <td>{{ bien.usuario_registro or '-' }}</td>
+                        <td>{{ macros.badge_estado(bien.estado) }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('editar.editar', codigo=bien.codigo_bien) }}"
+                               class="btn btn-sm btn-outline-primary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{{ url_for('acta.descargar', codigo=bien.codigo_bien) }}"
+                               class="btn btn-sm btn-outline-secondary" title="Descargar acta PDF">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                            </a>
+                            {% if es_admin %}
+                            <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                    onclick="confirmarEliminacion('{{ bien.codigo_bien }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            <form id="form-eliminar-{{ bien.codigo_bien }}" method="POST"
+                                  action="{{ url_for('inventario.eliminar', codigo=bien.codigo_bien) }}" class="d-none">
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">No se encontraron bienes registrados.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center bg-white">
+        <span class="text-muted small">Total: {{ total }} bienes</span>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if pagina <= 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('inventario.listar', q=termino, pagina=pagina-1) }}">Anterior</a>
+                </li>
+                <li class="page-item disabled"><span class="page-link">Página {{ pagina }} de {{ total_paginas }}</span></li>
+                <li class="page-item {% if pagina >= total_paginas %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('inventario.listar', q=termino, pagina=pagina+1) }}">Siguiente</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Modal Nuevo Registro -->
+<div class="modal fade" id="modalNuevoRegistro" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('inventario.nuevo') }}">
+                <div class="modal-header" style="background-color:#2c3e50; color:#fff;">
+                    <h5 class="modal-title"><i class="bi bi-plus-lg"></i> Nuevo Registro de Bien</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" id="tabsNuevoRegistro" role="tablist">
+                        {% for tab_key, tab_label in tabs.items() %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if loop.first %}active{% endif %}"
+                                    id="tab-nuevo-{{ tab_key }}-btn" data-bs-toggle="tab"
+                                    data-bs-target="#tab-nuevo-{{ tab_key }}" type="button">
+                                {{ tab_label }}
+                            </button>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <div class="tab-content border border-top-0 p-3">
+                        {% for tab_key, tab_label in tabs.items() %}
+                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="tab-nuevo-{{ tab_key }}">
+                            <div class="row">
+                                {% for campo in campos if campo.tab == tab_key %}
+                                    {{ macros.campo_input(campo, None, tecnicos) }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <small class="text-muted">Los campos marcados con <span class="text-danger">*</span> son obligatorios. El bien se creará con estado inicial "En Revisión".</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    function confirmarEliminacion(codigo) {
+        if (confirm("¿Está seguro que desea eliminar el bien '" + codigo + "'? Esta acción no se puede deshacer.")) {
+            document.getElementById('form-eliminar-' + codigo).submit();
+        }
+    }
+</script>
+{% endblock %}
