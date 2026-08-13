@@ -13,11 +13,11 @@
 <div class="card mb-3">
     <div class="card-body">
         <div class="d-flex justify-content-between small mb-1">
-            <span>Progreso de campos completados</span>
-            <span id="texto-progreso">0%</span>
+            <span class="fw-semibold text-body-secondary">Progreso de campos completados</span>
+            <span id="texto-progreso" class="fw-bold">0%</span>
         </div>
-        <div class="progress" style="height: 10px;">
-            <div class="progress-bar bg-success" id="barra-progreso" role="progressbar" style="width: 0%;"></div>
+        <div class="progress" style="height: 10px; border-radius: 999px;">
+            <div class="progress-bar" id="barra-progreso" role="progressbar" style="width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-blue)); transition: width var(--transition);"></div>
         </div>
     </div>
 </div>
@@ -43,7 +43,7 @@
                 <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="tab-editar-{{ tab_key }}">
                     <div class="row">
                         {% for campo in campos if campo.tab == tab_key %}
-                            {{ macros.campo_input(campo, bien|attr(campo.attr), tecnicos, codigo_bloqueado=true) }}
+                            {{ macros.campo_input(campo, bien|attr(campo.attr), tecnicos, codigo_bloqueado=true, campos_bloqueados=campos_bloqueados) }}
                         {% endfor %}
                     </div>
                 </div>
@@ -100,8 +100,15 @@
         btnEnviarRevision.disabled = !this.checked;
     });
 
+    function deshabilitarBotones() {
+        [btnGuardarBorrador, btnEnviarRevision].forEach(b => { b.disabled = true; });
+    }
+
     btnGuardarBorrador.addEventListener('click', function () {
         estadoRevisionInput.value = 'Borrador';
+        const textoOriginal = btnGuardarBorrador.innerHTML;
+        deshabilitarBotones();
+        btnGuardarBorrador.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Guardando...';
         form.submit();
     });
 
@@ -121,6 +128,8 @@
             return;
         }
         estadoRevisionInput.value = 'En Revisión';
+        deshabilitarBotones();
+        btnEnviarRevision.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Enviando...';
         form.submit();
     });
 </script>

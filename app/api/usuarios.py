@@ -3,20 +3,20 @@ from flask import Blueprint, jsonify, request
 from app.extensions import db
 from app.models.usuario import ROLES_DISPONIBLES, Usuario
 from app.utils.auditoria import registrar
-from app.api.decorators import admin_required_api, usuario_desde_jwt
+from app.api.decorators import admin_o_editor_required_api, admin_required_api, usuario_desde_jwt
 
 api_usuarios_bp = Blueprint("api_usuarios", __name__, url_prefix="/api/usuarios")
 
 
 @api_usuarios_bp.route("", methods=["GET"])
-@admin_required_api
+@admin_o_editor_required_api
 def listar():
     usuarios = Usuario.query.order_by(Usuario.username).all()
     return jsonify([u.to_dict() for u in usuarios]), 200
 
 
 @api_usuarios_bp.route("", methods=["POST"])
-@admin_required_api
+@admin_o_editor_required_api
 def crear():
     admin = usuario_desde_jwt()
     datos = request.get_json(silent=True) or {}
@@ -45,7 +45,7 @@ def crear():
 
 
 @api_usuarios_bp.route("/<int:usuario_id>", methods=["PUT", "PATCH"])
-@admin_required_api
+@admin_o_editor_required_api
 def editar(usuario_id):
     admin = usuario_desde_jwt()
     usuario = Usuario.query.get(usuario_id)

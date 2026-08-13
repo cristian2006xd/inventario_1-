@@ -5,13 +5,13 @@ from flask import Blueprint, jsonify, request
 from app.extensions import db
 from app.models.inventario import ESTADO_APROBADO, ESTADO_OBSERVADO, Inventario
 from app.utils.auditoria import registrar
-from app.api.decorators import admin_required_api, usuario_desde_jwt
+from app.api.decorators import admin_o_editor_required_api, usuario_desde_jwt
 
 api_tic_bp = Blueprint("api_tic", __name__, url_prefix="/api/tic")
 
 
 @api_tic_bp.route("/aprobar", methods=["POST"])
-@admin_required_api
+@admin_o_editor_required_api
 def aprobar():
     usuario = usuario_desde_jwt()
     datos = request.get_json(silent=True) or {}
@@ -34,7 +34,7 @@ def aprobar():
 
 
 @api_tic_bp.route("/observar", methods=["POST"])
-@admin_required_api
+@admin_o_editor_required_api
 def observar():
     usuario = usuario_desde_jwt()
     datos = request.get_json(silent=True) or {}

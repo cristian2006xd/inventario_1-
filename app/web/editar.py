@@ -6,7 +6,7 @@ from app.models.usuario import Usuario
 from app.utils.auditoria import registrar
 from app.utils.campos import CAMPOS_BIEN, CAMPOS_POR_ATTR, CAMPOS_REQUERIDOS, TABS
 from app.utils.decorators import login_required, usuario_actual
-from app.utils.permisos import es_administrador, puede_editar_bien
+from app.utils.permisos import campos_bloqueados_para, es_administrador, puede_editar_bien
 from app.web.inventario import _aplicar_campos_formulario
 
 editar_bp = Blueprint("editar", __name__)
@@ -25,6 +25,8 @@ def editar(codigo):
             flash("Acceso denegado: no tienes permisos para editar este bien.", "danger")
         return redirect(url_for("inventario.listar"))
 
+    campos_bloqueados = campos_bloqueados_para(usuario)
+
     if request.method == "POST":
         estado_revision = (request.form.get("estado_revision") or "").strip()
         if estado_revision not in (ESTADO_BORRADOR, ESTADO_EN_REVISION):
@@ -42,10 +44,10 @@ def editar(codigo):
                 tecnicos = Usuario.query.filter_by(activo=True).order_by(Usuario.username).all()
                 return render_template(
                     "editar_bien.html", bien=bien, tabs=TABS, campos=CAMPOS_BIEN,
-                    tecnicos=tecnicos, es_admin=es_administrador(usuario),
+                    tecnicos=tecnicos, es_admin=es_administrador(usuario), campos_bloqueados=campos_bloqueados,
                 ), 400
 
-        _aplicar_campos_formulario(bien, request.form, incluir_codigo=False)
+        _aplicar_campos_formulario(bien, request.form, incluir_codigo=False, campos_bloqueados=campos_bloqueados)
         bien.estado = estado_revision
         db.session.commit()
 
@@ -58,5 +60,5 @@ def editar(codigo):
     tecnicos = Usuario.query.filter_by(activo=True).order_by(Usuario.username).all()
     return render_template(
         "editar_bien.html", bien=bien, tabs=TABS, campos=CAMPOS_BIEN,
-        tecnicos=tecnicos, es_admin=es_administrador(usuario),
+        tecnicos=tecnicos, es_admin=es_administrador(usuario), campos_bloqueados=campos_bloqueados,
     )

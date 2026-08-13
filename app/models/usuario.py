@@ -3,8 +3,9 @@ from datetime import datetime
 from app.extensions import bcrypt, db
 
 ROL_ADMINISTRADOR = "Administrador"
+ROL_EDITOR = "Editor"
 ROL_TECNICO = "Tecnico Levantamiento"
-ROLES_DISPONIBLES = [ROL_ADMINISTRADOR, ROL_TECNICO]
+ROLES_DISPONIBLES = [ROL_ADMINISTRADOR, ROL_EDITOR, ROL_TECNICO]
 
 
 class Usuario(db.Model):
@@ -32,6 +33,21 @@ class Usuario(db.Model):
     @property
     def es_administrador(self) -> bool:
         return self.rol_normalizado == ROL_ADMINISTRADOR.lower()
+
+    @property
+    def es_editor(self) -> bool:
+        return self.rol_normalizado == ROL_EDITOR.lower()
+
+    @property
+    def tiene_acceso_administrativo(self) -> bool:
+        """Administrador o Editor: mismo nivel de acceso a las secciones
+        administrativas (TIC, Inventario Previo, Auditoría, Usuarios).
+
+        El Editor tiene todos los permisos del Administrador excepto eliminar
+        registros; esa restricción se aplica aparte, no aquí (ver
+        `puede_eliminar` en app.utils.permisos).
+        """
+        return self.es_administrador or self.es_editor
 
     @property
     def es_tecnico(self) -> bool:

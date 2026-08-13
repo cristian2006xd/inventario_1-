@@ -9,7 +9,7 @@ from app.utils.campos import CAMPOS_BIEN, TABS, TIPO_TEXTO
 from app.utils.decorators import login_required, usuario_actual
 from app.utils.excel_export import exportar_inventario_excel, nombre_archivo_exportacion
 from app.utils.parsing import limpiar_texto_corto, parse_decimal, parse_entero, parse_fecha
-from app.utils.permisos import es_administrador
+from app.utils.permisos import campos_bloqueados_para, es_administrador
 
 inventario_bp = Blueprint("inventario", __name__)
 
@@ -22,9 +22,17 @@ def _query_busqueda(termino: str):
         patron = f"%{termino}%"
         consulta = consulta.filter(or_(
             Inventario.codigo_bien.ilike(patron),
+            Inventario.codigo_anterior.ilike(patron),
+            Inventario.identificador.ilike(patron),
             Inventario.bien.ilike(patron),
+            Inventario.serie_identificacion.ilike(patron),
+            Inventario.marca_otros.ilike(patron),
             Inventario.estado_bien.ilike(patron),
+            Inventario.bodega.ilike(patron),
+            Inventario.ubicacion_bodega.ilike(patron),
             Inventario.custodio_actual.ilike(patron),
+            Inventario.custodio_activo.ilike(patron),
+            Inventario.nro_cedula_ruc.ilike(patron),
             Inventario.usuario_registro.ilike(patron),
         ))
     return consulta.order_by(Inventario.id.desc())
@@ -54,7 +62,7 @@ def listar():
         tabs=TABS,
         campos=CAMPOS_BIEN,
         tecnicos=tecnicos,
-        es_admin=es_administrador(usuario_actual()),
+        campos_bloqueados=campos_bloqueados_para(usuario_actual()),
     )
 
 
@@ -73,7 +81,7 @@ def nuevo():
         return redirect(url_for("inventario.listar"))
 
     bien = Inventario(codigo_bien=codigo_bien, estado=ESTADO_EN_REVISION, usuario_registro=usuario.username)
-    _aplicar_campos_formulario(bien, request.form, incluir_codigo=False)
+    _aplicar_campos_formulario(bien, request.form, incluir_codigo=False, campos_bloqueados=campos_bloqueados_para(usuario))
 
     db.session.add(bien)
     db.session.commit()
@@ -125,11 +133,15 @@ def exportar():
     )
 
 
-def _aplicar_campos_formulario(bien: Inventario, form, incluir_codigo: bool = True) -> None:
+def _aplicar_campos_formulario(
+    bien: Inventario, form, incluir_codigo: bool = True, campos_bloqueados: frozenset = frozenset()
+) -> None:
     from app.utils.campos import TIPO_DECIMAL, TIPO_ENTERO, TIPO_FECHA
 
     for campo in CAMPOS_BIEN:
         if campo["attr"] == "codigo_bien" and not incluir_codigo:
+            continue
+        if campo["attr"] in campos_bloqueados:
             continue
         if campo["attr"] not in form:
             continue

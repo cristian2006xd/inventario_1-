@@ -1,43 +1,299 @@
 {% extends "base.html" %}
 {% block titulo %}Iniciar Sesión | INAMHI{% endblock %}
+
+{% block estilos_extra %}
+<style>
+    body { background-color: #0b1120; }
+
+    /* --- Fondo animado con los colores vivos del logo (azul, dorado, rojo) --- */
+    .login-shell {
+        position: relative;
+        min-height: calc(100vh - 2rem);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: var(--radius);
+        isolation: isolate;
+        background: linear-gradient(125deg, #0b1120 0%, #1e3a8a 24%, #0f172a 42%, #7c2d12 58%, #0b1120 76%, #1e3a8a 100%);
+        background-size: 320% 320%;
+        animation: gradientShift 22s ease infinite;
+    }
+
+    @keyframes gradientShift {
+        0%   { background-position: 0% 50%; }
+        50%  { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Manchas de color grandes y difuminadas ("aurora"), a la deriva lenta */
+    .auroras {
+        position: absolute;
+        inset: -10%;
+        z-index: 0;
+        pointer-events: none;
+        filter: blur(2px);
+    }
+    .aurora {
+        position: absolute;
+        border-radius: 50%;
+        opacity: 0.5;
+        filter: blur(60px);
+        animation: derivar ease-in-out infinite;
+    }
+    .aurora.dorado { background: radial-gradient(circle, rgba(250,204,21,0.85), rgba(250,204,21,0) 70%);
+        width: 46vw; height: 46vw; left: -8%; top: -6%; animation-duration: 24s; }
+    .aurora.azul { background: radial-gradient(circle, rgba(37,99,235,0.85), rgba(37,99,235,0) 70%);
+        width: 50vw; height: 50vw; right: -12%; top: 8%; animation-duration: 28s; animation-delay: 2s; }
+    .aurora.rojo { background: radial-gradient(circle, rgba(220,38,38,0.7), rgba(220,38,38,0) 70%);
+        width: 38vw; height: 38vw; left: 20%; bottom: -14%; animation-duration: 20s; animation-delay: 1s; }
+
+    @keyframes derivar {
+        0%   { transform: translate(0, 0) scale(1); }
+        50%  { transform: translate(4%, -5%) scale(1.12); }
+        100% { transform: translate(0, 0) scale(1); }
+    }
+
+    /* Partículas sutiles: círculos difuminados flotando */
+    .particulas {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .particula {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.55), rgba(255,255,255,0) 70%);
+        filter: blur(1px);
+        opacity: 0.4;
+        animation: flotar linear infinite;
+    }
+    .particula.violeta { background: radial-gradient(circle at 30% 30%, rgba(129,140,248,0.65), rgba(129,140,248,0) 70%); }
+    .particula.azul { background: radial-gradient(circle at 30% 30%, rgba(96,165,250,0.6), rgba(96,165,250,0) 70%); }
+    .particula.dorado { background: radial-gradient(circle at 30% 30%, rgba(250,204,21,0.65), rgba(250,204,21,0) 70%); }
+    .particula.rojo { background: radial-gradient(circle at 30% 30%, rgba(248,113,113,0.6), rgba(248,113,113,0) 70%); }
+
+    @keyframes flotar {
+        0%   { transform: translateY(0) translateX(0) scale(1); }
+        50%  { transform: translateY(-38px) translateX(14px) scale(1.08); }
+        100% { transform: translateY(0) translateX(0) scale(1); }
+    }
+
+    .p1 { width: 90px;  height: 90px;  left: 8%;  top: 18%;  animation-duration: 12s; }
+    .p2 { width: 50px;  height: 50px;  left: 22%; top: 68%;  animation-duration: 9s;  animation-delay: 1s; }
+    .p3 { width: 130px; height: 130px; left: 78%; top: 12%;  animation-duration: 15s; animation-delay: 0.5s; }
+    .p4 { width: 60px;  height: 60px;  left: 88%; top: 62%;  animation-duration: 10s; animation-delay: 2s; }
+    .p5 { width: 38px;  height: 38px;  left: 48%; top: 80%;  animation-duration: 8s;  animation-delay: 1.5s; }
+    .p6 { width: 70px;  height: 70px;  left: 60%; top: 30%;  animation-duration: 13s; animation-delay: 0.8s; }
+    .p7 { width: 26px;  height: 26px;  left: 12%; top: 46%;  animation-duration: 7s;  animation-delay: 2.5s; }
+    .p8 { width: 45px;  height: 45px;  left: 68%; top: 78%;  animation-duration: 11s; animation-delay: 0.3s; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .login-shell { animation: none; }
+        .particula { animation: none; }
+        .aurora { animation: none; }
+    }
+
+    /* Tarjeta de acceso: panel casi transparente, se funde con el fondo animado */
+    .login-card {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 420px;
+        margin: 1.5rem;
+        padding: 2.5rem 2.25rem 2.25rem;
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        overflow: hidden;
+        animation: apareceCard 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .login-card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #2563eb, #facc15, #dc2626);
+    }
+
+    @keyframes apareceCard {
+        from { opacity: 0; transform: translateY(14px) scale(0.98); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .login-logo-wrap {
+        display: inline-block;
+        background: #ffffff;
+        border-radius: 0.9rem;
+        padding: 0.75rem 1rem;
+        margin: 0 auto 1.1rem;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+        animation: apareceLogo 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .login-logo {
+        display: block;
+        width: 180px;
+        max-width: 100%;
+        height: auto;
+    }
+
+    @keyframes apareceLogo {
+        from { opacity: 0; transform: translateY(-8px) scale(0.92); }
+        to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .login-titulo-grande {
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 1.9rem;
+        letter-spacing: -0.01em;
+        text-shadow: 0 0 30px rgba(96, 165, 250, 0.45);
+        margin-bottom: 0.3rem;
+    }
+
+    .login-subtitulo {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        color: rgba(255, 255, 255, 0.92);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .login-subtitulo i { font-size: 0.8rem; color: #facc15; }
+
+    /* Campos tipo píldora: sin etiqueta visible, ícono flotando a la derecha */
+    .campo-pill { position: relative; }
+    .pill-input {
+        border-radius: 999px !important;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.32);
+        color: #ffffff;
+        padding: 0.85rem 3rem 0.85rem 1.4rem;
+        font-size: 0.98rem;
+        transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+    .pill-input::placeholder { color: rgba(255, 255, 255, 0.65); }
+    .pill-input:focus {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.6);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.14);
+        color: #ffffff;
+    }
+    .pill-icon {
+        position: absolute;
+        right: 1.3rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 1.05rem;
+        pointer-events: none;
+    }
+    .pill-icon-clickable {
+        pointer-events: auto;
+        cursor: pointer;
+        transition: color var(--transition-fast);
+    }
+    .pill-icon-clickable:hover { color: #ffffff; }
+
+    .btn-login {
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--slate-900);
+        border: none;
+        padding: 0.8rem;
+        font-weight: 700;
+        font-size: 0.98rem;
+        letter-spacing: 0.02em;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+    }
+    .btn-login:hover {
+        background: #f1f5f9;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        transform: translateY(-1px);
+        color: var(--slate-900);
+    }
+    .btn-login:active { transform: translateY(0); }
+</style>
+{% endblock %}
+
+{% block mensajes_flash %}{% endblock %}
+
 {% block contenido %}
-<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card p-4" style="max-width: 420px; width: 100%;">
+<div class="login-shell">
+    <div class="auroras" aria-hidden="true">
+        <span class="aurora dorado"></span>
+        <span class="aurora azul"></span>
+        <span class="aurora rojo"></span>
+    </div>
+    <div class="particulas" aria-hidden="true">
+        <span class="particula p1 dorado"></span>
+        <span class="particula p2 violeta"></span>
+        <span class="particula p3 azul"></span>
+        <span class="particula p4 rojo"></span>
+        <span class="particula p5 dorado"></span>
+        <span class="particula p6 azul"></span>
+        <span class="particula p7 violeta"></span>
+        <span class="particula p8 rojo"></span>
+    </div>
+
+    <div class="login-card">
         <div class="text-center mb-4">
-            <i class="bi bi-cloud-sun-fill" style="font-size: 3rem; color: #2c3e50;"></i>
-            <h4 class="mt-2 mb-0" style="color: #2c3e50;">INAMHI</h4>
-            <div class="text-muted">Control de Activos</div>
+            <div class="login-logo-wrap">
+                <img src="{{ url_for('static', filename='img/login_img.png') }}" alt="INAMHI - Tiempo, Clima y Agua Ecuador" class="login-logo">
+            </div>
+            <h2 class="login-titulo-grande">Iniciar Sesión</h2>
+            <div class="login-subtitulo"><i class="bi bi-shield-check"></i> Sistema de Control de Activos</div>
         </div>
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% if mensajes %}
+                {% for categoria, mensaje in mensajes %}
+                    <div class="alert alert-{{ categoria }} alert-dismissible fade show py-2" role="alert">
+                        {{ mensaje }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         <form method="POST" action="{{ url_for('auth.login') }}" autocomplete="off">
-            <div class="mb-3">
-                <label class="form-label" for="username">Usuario</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-person"></i></span>
-                    <input type="text" class="form-control" id="username" name="username" required autofocus>
-                </div>
+            <div class="mb-3 campo-pill">
+                <input type="text" class="form-control pill-input" id="username" name="username"
+                       placeholder="Usuario" aria-label="Usuario" required autofocus>
+                <i class="bi bi-person-fill pill-icon"></i>
             </div>
-            <div class="mb-3">
-                <label class="form-label" for="password">Contraseña</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                    <input type="password" class="form-control" id="password" name="password" required>
-                    <button class="btn btn-outline-secondary" type="button" id="toggle-password">
-                        <i class="bi bi-eye" id="icono-toggle-password"></i>
-                    </button>
-                </div>
+            <div class="mb-4 campo-pill">
+                <input type="password" class="form-control pill-input" id="password" name="password"
+                       placeholder="Contraseña" aria-label="Contraseña" required>
+                <i class="bi bi-eye pill-icon pill-icon-clickable" id="toggle-password" role="button"
+                   aria-label="Mostrar contraseña" tabindex="0"></i>
             </div>
-            <button type="submit" class="btn btn-primary w-100" style="background-color:#2c3e50; border-color:#2c3e50;">
+            <button type="submit" class="btn btn-login w-100">
                 <i class="bi bi-box-arrow-in-right"></i> Ingresar
             </button>
         </form>
     </div>
 </div>
 {% endblock %}
+
 {% block scripts_extra %}
 <script>
-    document.getElementById('toggle-password').addEventListener('click', function () {
+    function alternarPassword() {
         const campo = document.getElementById('password');
-        const icono = document.getElementById('icono-toggle-password');
+        const icono = document.getElementById('toggle-password');
         if (campo.type === 'password') {
             campo.type = 'text';
             icono.classList.remove('bi-eye');
@@ -47,6 +303,18 @@
             icono.classList.remove('bi-eye-slash');
             icono.classList.add('bi-eye');
         }
+    }
+    const iconoTogglePassword = document.getElementById('toggle-password');
+    iconoTogglePassword.addEventListener('click', alternarPassword);
+    iconoTogglePassword.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alternarPassword(); }
+    });
+
+    const formLogin = document.querySelector('.login-card form');
+    formLogin.addEventListener('submit', function () {
+        const boton = formLogin.querySelector('button[type="submit"]');
+        boton.disabled = true;
+        boton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Ingresando...';
     });
 </script>
 {% endblock %}

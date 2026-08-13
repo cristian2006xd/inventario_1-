@@ -9,15 +9,19 @@ from app.utils.campos import (
     CAMPOS_BIEN, CAMPOS_POR_ATTR, CAMPOS_REQUERIDOS, TIPO_DECIMAL, TIPO_ENTERO, TIPO_FECHA, TIPO_TEXTO,
 )
 from app.utils.parsing import limpiar_texto_corto, parse_decimal, parse_entero, parse_fecha
-from app.utils.permisos import puede_editar_bien
+from app.utils.permisos import campos_bloqueados_para, puede_editar_bien
 from app.api.decorators import admin_required_api, usuario_desde_jwt
 
 api_bienes_bp = Blueprint("api_bienes", __name__, url_prefix="/api/bienes")
 
 
-def _aplicar_campos_json(bien: Inventario, datos: dict, incluir_codigo: bool = False) -> None:
+def _aplicar_campos_json(
+    bien: Inventario, datos: dict, incluir_codigo: bool = False, campos_bloqueados: frozenset = frozenset()
+) -> None:
     for campo in CAMPOS_BIEN:
         if campo["attr"] == "codigo_bien" and not incluir_codigo:
+            continue
+        if campo["attr"] in campos_bloqueados:
             continue
         if campo["attr"] not in datos:
             continue
@@ -85,7 +89,7 @@ def crear():
         return jsonify({"error": f"Ya existe un bien con el código '{codigo_bien}'"}), 409
 
     bien = Inventario(codigo_bien=codigo_bien, estado=ESTADO_EN_REVISION, usuario_registro=usuario.username)
-    _aplicar_campos_json(bien, datos)
+    _aplicar_campos_json(bien, datos, campos_bloqueados=campos_bloqueados_para(usuario))
     db.session.add(bien)
     db.session.commit()
 
@@ -126,7 +130,7 @@ def editar(codigo):
         if faltantes:
             return jsonify({"error": "Faltan campos obligatorios", "campos": faltantes}), 400
 
-    _aplicar_campos_json(bien, datos)
+    _aplicar_campos_json(bien, datos, campos_bloqueados=campos_bloqueados_para(usuario))
     bien.estado = estado_revision
     db.session.commit()
 

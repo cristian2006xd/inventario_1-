@@ -6,18 +6,20 @@ from sqlalchemy import or_
 from app.extensions import db
 from app.models.inventario import ESTADO_APROBADO, ESTADO_BORRADOR, ESTADO_EN_REVISION, ESTADO_OBSERVADO, Inventario
 from app.utils.auditoria import registrar
-from app.utils.decorators import admin_required, usuario_actual
+from app.utils.decorators import admin_o_editor_required, usuario_actual
 
 tic_bp = Blueprint("tic", __name__)
 
 ESTADOS_FILTRO = {ESTADO_EN_REVISION, ESTADO_OBSERVADO, ESTADO_APROBADO}
+ITEMS_POR_PAGINA = 15
 
 
 @tic_bp.route("/tic/bandeja", methods=["GET"])
-@admin_required
+@admin_o_editor_required
 def bandeja():
     termino = (request.args.get("q") or "").strip()
     estado_filtro = (request.args.get("estado") or "").strip()
+    pagina = request.args.get("pagina", 1, type=int)
 
     pendientes = Inventario.query.filter(
         or_(Inventario.estado == ESTADO_EN_REVISION, Inventario.estado == ESTADO_BORRADOR, Inventario.estado.is_(None))
@@ -36,12 +38,26 @@ def bandeja():
         patron = f"%{termino}%"
         consulta = consulta.filter(or_(
             Inventario.codigo_bien.ilike(patron),
+            Inventario.codigo_anterior.ilike(patron),
+            Inventario.identificador.ilike(patron),
             Inventario.bien.ilike(patron),
+            Inventario.serie_identificacion.ilike(patron),
+            Inventario.marca_otros.ilike(patron),
+            Inventario.estado_bien.ilike(patron),
+            Inventario.bodega.ilike(patron),
+            Inventario.ubicacion_bodega.ilike(patron),
             Inventario.custodio_actual.ilike(patron),
+            Inventario.custodio_activo.ilike(patron),
+            Inventario.nro_cedula_ruc.ilike(patron),
             Inventario.usuario_registro.ilike(patron),
         ))
 
-    bienes = consulta.order_by(Inventario.id.desc()).all()
+    consulta = consulta.order_by(Inventario.id.desc())
+    total_filtrado = consulta.count()
+    total_paginas = max(1, (total_filtrado + ITEMS_POR_PAGINA - 1) // ITEMS_POR_PAGINA)
+    pagina = min(max(1, pagina), total_paginas)
+
+    bienes = consulta.offset((pagina - 1) * ITEMS_POR_PAGINA).limit(ITEMS_POR_PAGINA).all()
 
     return render_template(
         "bandeja_tic.html",
@@ -52,11 +68,14 @@ def bandeja():
         kpi_total=total,
         termino=termino,
         estado_filtro=estado_filtro,
+        pagina=pagina,
+        total_paginas=total_paginas,
+        total_filtrado=total_filtrado,
     )
 
 
 @tic_bp.route("/tic/aprobar/<codigo>", methods=["POST"])
-@admin_required
+@admin_o_editor_required
 def aprobar(codigo):
     usuario = usuario_actual()
     bien = Inventario.query.filter_by(codigo_bien=codigo).first_or_404()
@@ -76,7 +95,7 @@ def aprobar(codigo):
 
 
 @tic_bp.route("/tic/observar/<codigo>", methods=["POST"])
-@admin_required
+@admin_o_editor_required
 def observar(codigo):
     usuario = usuario_actual()
     bien = Inventario.query.filter_by(codigo_bien=codigo).first_or_404()

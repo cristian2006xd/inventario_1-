@@ -4,50 +4,325 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block titulo %}INAMHI | Control de Activos{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
     <style>
         :root {
-            --inamhi-dark: #2c3e50;
-            --inamhi-accent: #2980b9;
+            /* Paleta institucional INAMHI: azules vivos con acento dorado */
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-600: #475569;
+            --slate-500: #64748b;
+            --slate-400: #94a3b8;
+            --slate-300: #cbd5e1;
+            --slate-200: #e2e8f0;
+            --slate-100: #f1f5f9;
+            --slate-50:  #f8fafc;
+
+            --accent: #2563eb;
+            --accent-2: #3b82f6;
+            --accent-soft: #eaf2ff;
+            --accent-blue: #1d4ed8;
+            --accent-gold: #f59e0b;
+
+            --success: #16a34a;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --info: #0891b2;
+
+            --inamhi-dark: var(--slate-800);
+            --inamhi-accent: var(--accent);
+            --inamhi-gradiente-oscuro: linear-gradient(100deg, #0f172a 0%, #16305c 55%, #1d4ed8 130%);
+
+            --radius: 1.1rem;
+            --radius-sm: 0.8rem;
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-md: 0 10px 26px rgba(15, 23, 42, 0.09), 0 2px 6px rgba(15, 23, 42, 0.05);
+            --shadow-lg: 0 22px 50px rgba(15, 23, 42, 0.14), 0 6px 16px rgba(15, 23, 42, 0.06);
+            --transition-fast: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: 300ms cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        * { -webkit-font-smoothing: antialiased; }
+
+        html, body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        }
+
         body {
-            background-color: #f4f6f7;
+            background: linear-gradient(180deg, #f7fafd 0%, #eef4fc 100%) fixed;
+            color: var(--slate-800);
         }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: var(--slate-900);
+        }
+
+        a { color: var(--accent); transition: color var(--transition-fast); }
+        a:hover { color: var(--accent-2); }
+
+        /* --- Navbar --- */
         .navbar-inamhi {
-            background-color: var(--inamhi-dark);
+            background: var(--inamhi-gradiente-oscuro);
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.22);
+            padding-top: 0.7rem;
+            padding-bottom: 0.7rem;
         }
         .navbar-inamhi .navbar-brand {
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: -0.01em;
             color: #ffffff;
         }
+        .navbar-logo-chip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffffff;
+            border-radius: 0.9rem;
+            padding: 0.35rem 0.6rem;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+            transition: transform var(--transition);
+        }
+        .navbar-brand:hover .navbar-logo-chip { transform: scale(1.04); }
+        .navbar-logo-chip img {
+            height: 46px;
+            width: auto;
+            display: block;
+        }
+        .navbar-brand-texto {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+        .navbar-brand-texto .principal {
+            font-weight: 800;
+            font-size: 1.25rem;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+        .navbar-brand-texto .secundario {
+            font-size: 0.72rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.6);
+        }
         .navbar-inamhi .nav-link {
-            color: #ecf0f1;
+            position: relative;
+            color: var(--slate-200);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 0.85rem;
+            font-weight: 500;
+            transition: background-color var(--transition), color var(--transition), transform var(--transition);
+        }
+        .navbar-inamhi .nav-link i {
+            color: rgba(255, 255, 255, 0.5);
+            transition: color var(--transition);
         }
         .navbar-inamhi .nav-link:hover {
             color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
         }
+        .navbar-inamhi .nav-link:hover i { color: var(--accent-gold); }
+        .navbar-inamhi .nav-link.active {
+            color: #ffffff;
+            font-weight: 700;
+            background-color: rgba(255, 255, 255, 0.12);
+        }
+        .navbar-inamhi .nav-link.active i { color: var(--accent-gold); }
+        .navbar-inamhi .nav-link.active::after {
+            content: "";
+            position: absolute;
+            left: 0.85rem;
+            right: 0.85rem;
+            bottom: 0.15rem;
+            height: 2px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--accent-2), var(--accent-gold), #dc2626);
+        }
+        .navbar-inamhi .badge.bg-secondary {
+            background-color: rgba(255, 255, 255, 0.16) !important;
+        }
+
+        /* --- Cards --- */
         .card {
-            border: none;
-            border-radius: 0.75rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow var(--transition), transform var(--transition);
+            overflow: hidden;
         }
-        .badge-estado-borrador { background-color: #95a5a6; }
-        .badge-estado-en-revision { background-color: #f39c12; }
-        .badge-estado-observado { background-color: #e74c3c; }
-        .badge-estado-aprobado { background-color: #27ae60; }
+        .card:hover { box-shadow: var(--shadow-md); }
+        .card-body { padding: 1.35rem; }
+        .card-footer, .card-header {
+            background-color: #ffffff;
+            border-color: rgba(15, 23, 42, 0.06);
+        }
+
+        /* --- Buttons --- */
+        .btn {
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            transition: transform var(--transition), box-shadow var(--transition),
+                        background-color var(--transition), border-color var(--transition), opacity var(--transition);
+        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        .btn:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 0.2rem var(--accent-soft), 0 0 0 1px var(--accent);
+        }
+        .btn:disabled { transform: none; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-blue) 100%);
+            border-color: var(--accent);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--accent-2) 0%, var(--accent-blue) 100%);
+            border-color: var(--accent-2);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+        .btn-outline-primary {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+        .btn-outline-primary:hover {
+            background-color: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.22);
+        }
+        .btn-secondary {
+            background-color: var(--slate-600);
+            border-color: var(--slate-600);
+        }
+        .btn-secondary:hover {
+            background-color: var(--slate-700);
+            border-color: var(--slate-700);
+        }
+
+        /* --- Forms --- */
+        .form-control, .form-select {
+            border-radius: var(--radius-sm);
+            border-color: var(--slate-300);
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 0.2rem var(--accent-soft);
+        }
+
+        /* Campos que se autoajustan a su contenido (ver script al final de base.html):
+           .campo-autoajuste crece en ANCHO (campos de una línea), .campo-autoaltura
+           crece en ALTO (textarea de texto largo), para que el valor completo sea
+           siempre visible sin necesidad de hacer scroll dentro del campo. */
+        input.campo-autoajuste {
+            width: auto;
+            min-width: 240px;
+            max-width: 100%;
+        }
+        textarea.campo-autoaltura {
+            overflow: hidden;
+            resize: none;
+        }
+        .input-group-text {
+            background-color: var(--slate-50);
+            border-color: var(--slate-300);
+            color: var(--slate-500);
+        }
+        .form-label {
+            font-weight: 600;
+            color: var(--slate-700);
+            font-size: 0.9rem;
+        }
+
+        /* --- Tables --- */
         .table thead th {
-            background-color: var(--inamhi-dark);
+            background: var(--inamhi-gradiente-oscuro);
             color: #ffffff;
             white-space: nowrap;
+            font-weight: 600;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: none;
         }
+        .table > :not(caption) > * > * { vertical-align: middle; }
+        .table-hover > tbody > tr {
+            transition: background-color var(--transition);
+        }
+        .table-hover > tbody > tr:hover > * {
+            background-color: var(--accent-soft);
+        }
+
+        /* --- Badges --- */
+        .badge-estado-borrador { background-color: var(--slate-500); }
+        .badge-estado-en-revision { background-color: var(--warning); }
+        .badge-estado-observado { background-color: var(--danger); }
+        .badge-estado-aprobado { background-color: var(--success); }
+
+        /* --- KPI cards --- */
         .kpi-card {
-            border-radius: 0.75rem;
+            border-radius: var(--radius);
             color: #ffffff;
+            border: none;
+            box-shadow: var(--shadow-md);
+            transition: transform var(--transition), box-shadow var(--transition);
         }
+        .kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+
+        /* --- Modals --- */
+        .modal-content {
+            border: none;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+        .modal-header {
+            background: var(--inamhi-gradiente-oscuro);
+            color: #ffffff;
+            border-bottom: none;
+        }
+        .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+        .modal.fade .modal-dialog {
+            transform: translateY(-16px) scale(0.98);
+            transition: transform var(--transition), opacity var(--transition);
+        }
+        .modal.show .modal-dialog { transform: translateY(0) scale(1); }
+
+        /* --- Nav tabs --- */
+        .nav-tabs .nav-link {
+            border: none;
+            color: var(--slate-500);
+            font-weight: 600;
+            border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+            transition: color var(--transition), background-color var(--transition);
+        }
+        .nav-tabs .nav-link:hover { color: var(--accent); background-color: var(--accent-soft); }
+        .nav-tabs .nav-link.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+            background-color: transparent;
+        }
+
+        /* --- Alerts --- */
+        .alert {
+            border: none;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid transparent;
+        }
+        .alert-success { border-left-color: var(--success); }
+        .alert-danger { border-left-color: var(--danger); }
+        .alert-warning { border-left-color: var(--warning); }
+        .alert-info { border-left-color: var(--info); }
+
         footer {
-            color: #7f8c8d;
+            color: var(--slate-500);
         }
     </style>
     {% block estilos_extra %}{% endblock %}
@@ -57,8 +332,13 @@
 <nav class="navbar navbar-expand-lg navbar-inamhi navbar-dark mb-4">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('inventario.listar') }}">
-            <i class="bi bi-cloud-sun-fill fs-4"></i>
-            <span>INAMHI | Control de Activos</span>
+            <span class="navbar-logo-chip">
+                <img src="{{ url_for('static', filename='img/login_img.png') }}" alt="INAMHI">
+            </span>
+            <span class="navbar-brand-texto">
+                <span class="principal">INAMHI</span>
+                <span class="secundario">Control de Activos</span>
+            </span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarInamhi">
             <span class="navbar-toggler-icon"></span>
@@ -66,28 +346,28 @@
         <div class="collapse navbar-collapse" id="navbarInamhi">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('inventario.listar') }}">
+                    <a class="nav-link {% if request.endpoint == 'inventario.listar' %}active{% endif %}" href="{{ url_for('inventario.listar') }}">
                         <i class="bi bi-box-seam"></i> Inventario
                     </a>
                 </li>
-                {% if usuario_actual.es_administrador %}
+                {% if usuario_actual.tiene_acceso_administrativo %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('tic.bandeja') }}">
+                    <a class="nav-link {% if request.endpoint == 'tic.bandeja' %}active{% endif %}" href="{{ url_for('tic.bandeja') }}">
                         <i class="bi bi-clipboard-check"></i> Bandeja TIC
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('previo.listar') }}">
+                    <a class="nav-link {% if request.endpoint == 'previo.listar' %}active{% endif %}" href="{{ url_for('previo.listar') }}">
                         <i class="bi bi-file-earmark-spreadsheet"></i> Inventario Previo
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auditoria.listar') }}">
+                    <a class="nav-link {% if request.endpoint == 'auditoria.listar' %}active{% endif %}" href="{{ url_for('auditoria.listar') }}">
                         <i class="bi bi-journal-text"></i> Auditoría
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('usuarios.listar') }}">
+                    <a class="nav-link {% if request.endpoint == 'usuarios.listar' %}active{% endif %}" href="{{ url_for('usuarios.listar') }}">
                         <i class="bi bi-people"></i> Usuarios
                     </a>
                 </li>
@@ -111,6 +391,7 @@
 {% endif %}
 
 <div class="container-fluid px-4">
+    {% block mensajes_flash %}
     {% with mensajes = get_flashed_messages(with_categories=true) %}
         {% if mensajes %}
             {% for categoria, mensaje in mensajes %}
@@ -121,6 +402,7 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
+    {% endblock %}
 
     {% block contenido %}{% endblock %}
 </div>
@@ -129,7 +411,69 @@
     INAMHI &mdash; Sistema de Control de Activos / Inventario de Bienes
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+            new bootstrap.Tooltip(el);
+        });
+    });
+
+    // Autoajuste de campos de formulario a su contenido (ver .campo-autoajuste /
+    // .campo-autoaltura en el <style>). Los campos dentro de un modal o de una
+    // pestaña (tab) oculta miden alto/ancho 0 mientras están con display:none,
+    // así que además de al cargar la página, se recalculan al mostrarse el
+    // modal o la pestaña correspondiente.
+    (function () {
+        var lienzoMedicion = document.createElement('canvas');
+
+        function anchoTexto(texto, fuente) {
+            var ctx = lienzoMedicion.getContext('2d');
+            ctx.font = fuente;
+            return ctx.measureText(texto).width;
+        }
+
+        function autoAjustarAncho(input) {
+            var estilo = window.getComputedStyle(input);
+            var fuente = estilo.fontStyle + ' ' + estilo.fontWeight + ' ' + estilo.fontSize + ' ' + estilo.fontFamily;
+            var texto = input.value || input.placeholder || '';
+            var relleno = parseFloat(estilo.paddingLeft) + parseFloat(estilo.paddingRight)
+                + parseFloat(estilo.borderLeftWidth) + parseFloat(estilo.borderRightWidth) + 6;
+            var anchoDeseado = anchoTexto(texto, fuente) + relleno;
+            var anchoMinimo = 240;
+            var anchoMaximo = input.parentElement ? input.parentElement.clientWidth : 0;
+            if (!anchoMaximo) { anchoMaximo = anchoDeseado; }
+            var ancho = Math.min(Math.max(anchoDeseado, anchoMinimo), anchoMaximo);
+            input.style.width = ancho + 'px';
+        }
+
+        function autoAjustarAltura(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight + 2) + 'px';
+        }
+
+        function ajustarCamposEn(contenedor) {
+            contenedor.querySelectorAll('input.campo-autoajuste').forEach(autoAjustarAncho);
+            contenedor.querySelectorAll('textarea.campo-autoaltura').forEach(autoAjustarAltura);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            ajustarCamposEn(document);
+        });
+
+        document.addEventListener('input', function (e) {
+            if (e.target.matches('input.campo-autoajuste')) { autoAjustarAncho(e.target); }
+            if (e.target.matches('textarea.campo-autoaltura')) { autoAjustarAltura(e.target); }
+        });
+
+        document.addEventListener('shown.bs.modal', function (e) { ajustarCamposEn(e.target); });
+        document.addEventListener('shown.bs.tab', function (e) {
+            var destino = e.target.getAttribute('data-bs-target');
+            var panel = destino ? document.querySelector(destino) : null;
+            if (panel) { ajustarCamposEn(panel); }
+        });
+    })();
+</script>
 {% block scripts_extra %}{% endblock %}
 </body>
 </html>

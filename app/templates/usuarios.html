@@ -46,13 +46,13 @@
                                     data-bs-target="#modalPassword-{{ u.id }}" title="Cambiar contraseña">
                                 <i class="bi bi-key"></i>
                             </button>
-                            {% if u.id != usuario_actual.id %}
-                            <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
-                                    onclick="confirmarEliminarUsuario('{{ u.id }}', '{{ u.username }}')">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                            <form id="form-eliminar-usuario-{{ u.id }}" method="POST"
-                                  action="{{ url_for('usuarios.eliminar', usuario_id=u.id) }}" class="d-none"></form>
+                            {% if u.id != usuario_actual.id and usuario_actual.es_administrador %}
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                        onclick="confirmarEliminarUsuario('{{ u.id }}', '{{ u.username }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                <form id="form-eliminar-usuario-{{ u.id }}" method="POST"
+                                      action="{{ url_for('usuarios.eliminar', usuario_id=u.id) }}" class="d-none"></form>
                             {% endif %}
                         </td>
                     </tr>

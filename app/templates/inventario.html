@@ -19,8 +19,11 @@
     <div class="card-body">
         <form method="GET" action="{{ url_for('inventario.listar') }}" class="row g-2 align-items-center">
             <div class="col-md-8">
-                <input type="text" class="form-control" name="q" value="{{ termino }}"
-                       placeholder="Buscar por Código del Bien, Bien, Estado, Custodio o Usuario Registro...">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" name="q" value="{{ termino }}"
+                           placeholder="Buscar por código, bien, serie, marca, estado, bodega, ubicación, custodio o usuario...">
+                </div>
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-search"></i> Buscar</button>
@@ -69,7 +72,7 @@
                                class="btn btn-sm btn-outline-secondary" title="Descargar acta PDF">
                                 <i class="bi bi-file-earmark-pdf"></i>
                             </a>
-                            {% if es_admin %}
+                            {% if usuario_actual.es_administrador %}
                             <button type="button" class="btn btn-sm btn-outline-danger" title="Eliminar"
                                     onclick="confirmarEliminacion('{{ bien.codigo_bien }}')">
                                 <i class="bi bi-trash"></i>
@@ -109,8 +112,8 @@
 <div class="modal fade" id="modalNuevoRegistro" tabindex="-1">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <form method="POST" action="{{ url_for('inventario.nuevo') }}">
-                <div class="modal-header" style="background-color:#2c3e50; color:#fff;">
+            <form method="POST" action="{{ url_for('inventario.nuevo') }}" id="form-nuevo-registro">
+                <div class="modal-header">
                     <h5 class="modal-title"><i class="bi bi-plus-lg"></i> Nuevo Registro de Bien</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -131,7 +134,7 @@
                         <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="tab-nuevo-{{ tab_key }}">
                             <div class="row">
                                 {% for campo in campos if campo.tab == tab_key %}
-                                    {{ macros.campo_input(campo, None, tecnicos) }}
+                                    {{ macros.campo_input(campo, None, tecnicos, campos_bloqueados=campos_bloqueados) }}
                                 {% endfor %}
                             </div>
                         </div>
@@ -141,7 +144,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Guardar Registro</button>
+                    <button type="submit" class="btn btn-primary" id="btn-guardar-nuevo"><i class="bi bi-save"></i> Guardar Registro</button>
                 </div>
             </form>
         </div>
@@ -157,5 +160,11 @@
             document.getElementById('form-eliminar-' + codigo).submit();
         }
     }
+
+    document.getElementById('form-nuevo-registro').addEventListener('submit', function () {
+        const boton = document.getElementById('btn-guardar-nuevo');
+        boton.disabled = true;
+        boton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Guardando...';
+    });
 </script>
 {% endblock %}

@@ -3,20 +3,20 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from app.extensions import db
 from app.models.usuario import ROLES_DISPONIBLES, Usuario
 from app.utils.auditoria import registrar
-from app.utils.decorators import admin_required, usuario_actual
+from app.utils.decorators import admin_o_editor_required, admin_required, usuario_actual
 
 usuarios_bp = Blueprint("usuarios", __name__)
 
 
 @usuarios_bp.route("/usuarios", methods=["GET"])
-@admin_required
+@admin_o_editor_required
 def listar():
     usuarios = Usuario.query.order_by(Usuario.username).all()
     return render_template("usuarios.html", usuarios=usuarios, roles=ROLES_DISPONIBLES)
 
 
 @usuarios_bp.route("/usuarios/crear", methods=["POST"])
-@admin_required
+@admin_o_editor_required
 def crear():
     admin = usuario_actual()
     username = (request.form.get("username") or "").strip()
@@ -45,7 +45,7 @@ def crear():
 
 
 @usuarios_bp.route("/usuarios/editar/<int:usuario_id>", methods=["POST"])
-@admin_required
+@admin_o_editor_required
 def editar(usuario_id):
     admin = usuario_actual()
     usuario = Usuario.query.get_or_404(usuario_id)
@@ -77,7 +77,7 @@ def editar(usuario_id):
 
 
 @usuarios_bp.route("/usuarios/cambiar_password/<int:usuario_id>", methods=["POST"])
-@admin_required
+@admin_o_editor_required
 def cambiar_password(usuario_id):
     admin = usuario_actual()
     usuario = Usuario.query.get_or_404(usuario_id)

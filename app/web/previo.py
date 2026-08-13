@@ -1,13 +1,14 @@
 import os
 
-from flask import Blueprint, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, redirect, render_template, request, send_file, session, url_for
 from sqlalchemy import or_
 from werkzeug.utils import secure_filename
 
 from app.extensions import db
 from app.models.inventario_previo import InventarioPrevio
 from app.utils.auditoria import registrar
-from app.utils.decorators import admin_required, usuario_actual
+from app.utils.decorators import admin_o_editor_required, usuario_actual
+from app.utils.excel_export import generar_plantilla_excel
 from app.utils.excel_import import EXTENSIONES_PERMITIDAS, ExcelInvalidoError, cargar_a_staging, migrar_a_inventario
 
 previo_bp = Blueprint("previo", __name__)
@@ -16,7 +17,7 @@ ITEMS_POR_PAGINA = 25
 
 
 @previo_bp.route("/inventario-previo", methods=["GET"])
-@admin_required
+@admin_o_editor_required
 def listar():
     termino = (request.args.get("q") or "").strip()
     estado_filtro = (request.args.get("verificado") or "").strip()
@@ -27,9 +28,18 @@ def listar():
         patron = f"%{termino}%"
         consulta = consulta.filter(or_(
             InventarioPrevio.codigo_bien.ilike(patron),
+            InventarioPrevio.codigo_anterior.ilike(patron),
+            InventarioPrevio.identificador.ilike(patron),
             InventarioPrevio.bien.ilike(patron),
-            InventarioPrevio.custodio_actual.ilike(patron),
+            InventarioPrevio.serie_identificacion.ilike(patron),
+            InventarioPrevio.marca_otros.ilike(patron),
+            InventarioPrevio.estado_bien.ilike(patron),
+            InventarioPrevio.bodega.ilike(patron),
             InventarioPrevio.ubicacion_bodega.ilike(patron),
+            InventarioPrevio.custodio_actual.ilike(patron),
+            InventarioPrevio.custodio_activo.ilike(patron),
+            InventarioPrevio.nro_cedula_ruc.ilike(patron),
+            InventarioPrevio.nombre_archivo_origen.ilike(patron),
         ))
     if estado_filtro == "pendientes":
         consulta = consulta.filter_by(verificado=False)
@@ -62,8 +72,21 @@ def listar():
     )
 
 
+@previo_bp.route("/inventario-previo/plantilla", methods=["GET"])
+@admin_o_editor_required
+def plantilla():
+    buffer = generar_plantilla_excel()
+    registrar(usuario=usuario_actual().username, accion="Descarga de plantilla Excel", detalle=None)
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name="plantilla_inventario_inamhi.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
 @previo_bp.route("/inventario-previo/cargar", methods=["GET", "POST"])
-@admin_required
+@admin_o_editor_required
 def cargar():
     if request.method == "POST":
         archivo = request.files.get("archivo_excel")
@@ -98,7 +121,7 @@ def cargar():
 
 
 @previo_bp.route("/inventario-previo/validar/<int:fila_id>", methods=["POST"])
-@admin_required
+@admin_o_editor_required
 def validar(fila_id):
     usuario = usuario_actual()
     fila = InventarioPrevio.query.get_or_404(fila_id)
@@ -115,7 +138,7 @@ def validar(fila_id):
 
 
 @previo_bp.route("/inventario-previo/validar-todo", methods=["POST"])
-@admin_required
+@admin_o_editor_required
 def validar_todo():
     usuario = usuario_actual()
     pendientes = InventarioPrevio.query.filter_by(verificado=False)
@@ -135,7 +158,7 @@ def validar_todo():
 
 
 @previo_bp.route("/inventario-previo/migrar", methods=["POST"])
-@admin_required
+@admin_o_editor_required
 def migrar():
     usuario = usuario_actual()
     resumen = migrar_a_inventario(usuario.username)

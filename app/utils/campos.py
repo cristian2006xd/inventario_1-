@@ -104,8 +104,13 @@ CAMPOS_BIEN = [
     {"attr": "ubicacion_bodega", "label": "Ubicación de Bodega", "tab": "ubicacion", "tipo": TIPO_TEXTO,
      "requerido": True,
      "aliases": [
+         # Encabezados "M_..." (prefijo usado por MATRIZ_COMPLETA_INAMHI.xlsx para las
+         # columnas de referencia/histórico) deben ir DESPUÉS de sus equivalentes sin
+         # prefijo: se usa el primer alias con dato no vacío por fila, y la columna
+         # oficial siempre debe tener prioridad sobre la de respaldo.
          "Ubicación de Bodega", "UBICACIÓN 2026", "UBICACIÓN 2025", "ubicacion_previa",
          "Ubicación 2024", "UBICACIÓN INFORME", "UBICACIÓN GENERAL2",
+         "M_UBICACIÓN 2025", "M_Ubicación 2024", "M_UBICACIÓN INFORME", "M_UBICACIÓN GENERAL2",
      ]},
     {"attr": "nro_cedula_ruc", "label": "Nro de Cédula/ RUC", "tab": "ubicacion", "tipo": TIPO_TEXTO,
      "aliases": ["Nro de Cédula/ RUC", "Cédula", "RUC", "CEDULA", "Cedula"]},
@@ -113,6 +118,7 @@ CAMPOS_BIEN = [
      "requerido": True,
      "aliases": [
          "Custodio Actual", "USUARIO 2025", "USUARIO 2024", "custodio_previo", "ESBYE 2025 ACTUAL",
+         "M_USUARIO 2025", "M_USUARIO 2024", "M_ESBYE 2025 ACTUAL",
      ]},
     {"attr": "custodio_activo", "label": "Custodio Activo", "tab": "ubicacion", "tipo": TIPO_TEXTO,
      "aliases": ["Custodio Activo"]},
