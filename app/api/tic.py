@@ -28,7 +28,7 @@ def aprobar():
     bien.fecha_revision_tic = datetime.utcnow()
     db.session.commit()
 
-    registrar(usuario=usuario.username, accion="Aprobación TIC (API)", codigo_bien=codigo, detalle=nota or None)
+    registrar(usuario=usuario.username, accion="Aprobación de bien (API)", codigo_bien=codigo, detalle=nota or None)
 
     return jsonify(bien.to_dict()), 200
 
@@ -54,6 +54,6 @@ def observar():
     bien.fecha_revision_tic = datetime.utcnow()
     db.session.commit()
 
-    registrar(usuario=usuario.username, accion="Observación TIC (API)", codigo_bien=codigo, detalle=motivo)
+    registrar(usuario=usuario.username, accion="Observación de bien (API)", codigo_bien=codigo, detalle=motivo)
 
     return jsonify(bien.to_dict()), 200

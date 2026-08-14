@@ -87,7 +87,7 @@ def aprobar(codigo):
     bien.fecha_revision_tic = datetime.utcnow()
     db.session.commit()
 
-    registrar(usuario=usuario.username, accion="Aprobación TIC", codigo_bien=codigo,
+    registrar(usuario=usuario.username, accion="Aprobación de bien", codigo_bien=codigo,
               detalle=nota or "Bien aprobado sin observaciones adicionales")
 
     flash(f"Bien '{codigo}' aprobado correctamente.", "success")
@@ -111,7 +111,7 @@ def observar(codigo):
     bien.fecha_revision_tic = datetime.utcnow()
     db.session.commit()
 
-    registrar(usuario=usuario.username, accion="Observación TIC", codigo_bien=codigo, detalle=motivo)
+    registrar(usuario=usuario.username, accion="Observación de bien", codigo_bien=codigo, detalle=motivo)
 
     flash(f"Bien '{codigo}' marcado como Observado.", "warning")
     return redirect(url_for("tic.bandeja"))

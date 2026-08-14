@@ -353,7 +353,7 @@
                 {% if usuario_actual.tiene_acceso_administrativo %}
                 <li class="nav-item">
                     <a class="nav-link {% if request.endpoint == 'tic.bandeja' %}active{% endif %}" href="{{ url_for('tic.bandeja') }}">
-                        <i class="bi bi-clipboard-check"></i> Bandeja TIC
+                        <i class="bi bi-clipboard-check"></i> Aprobación de Bienes
                     </a>
                 </li>
                 <li class="nav-item">
@@ -390,7 +390,8 @@
 </nav>
 {% endif %}
 
-<div class="container-fluid px-4">
+<div class="{% if usuario_actual %}container-fluid px-4{% endif %}">
+    {% if usuario_actual %}
     {% block mensajes_flash %}
     {% with mensajes = get_flashed_messages(with_categories=true) %}
         {% if mensajes %}
@@ -403,13 +404,16 @@
         {% endif %}
     {% endwith %}
     {% endblock %}
+    {% endif %}
 
     {% block contenido %}{% endblock %}
 </div>
 
+{% if usuario_actual %}
 <footer class="text-center py-4 mt-5 small">
     INAMHI &mdash; Sistema de Control de Activos / Inventario de Bienes
 </footer>
+{% endif %}
 
 <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
 <script>

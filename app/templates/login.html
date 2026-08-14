@@ -3,17 +3,25 @@
 
 {% block estilos_extra %}
 <style>
-    body { background-color: #0b1120; }
+    html, body {
+        height: 100%;
+        margin: 0;
+        background-color: #0b1120;
+    }
 
-    /* --- Fondo animado con los colores vivos del logo (azul, dorado, rojo) --- */
+    /* --- Fondo animado con los colores vivos del logo (azul, dorado, rojo) ---
+       Pantalla completa: sin margen, sin esquinas redondeadas ni límite de alto,
+       cubre todo el viewport (el <div> contenedor de base.html ya no le aplica
+       padding cuando no hay sesión iniciada, ver base.html). */
     .login-shell {
-        position: relative;
-        min-height: calc(100vh - 2rem);
+        position: fixed;
+        inset: 0;
+        min-height: 100vh;
+        width: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        border-radius: var(--radius);
         isolation: isolate;
         background: linear-gradient(125deg, #0b1120 0%, #1e3a8a 24%, #0f172a 42%, #7c2d12 58%, #0b1120 76%, #1e3a8a 100%);
         background-size: 320% 320%;
