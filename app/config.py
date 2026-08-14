@@ -65,7 +65,12 @@ class DevelopmentConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    SESSION_COOKIE_SECURE = True
+    # 'true' por defecto (cookie de sesión solo viaja por HTTPS). Si el
+    # servidor se sirve por HTTP plano (ej. IP interna sin certificado TLS),
+    # hay que poner SESSION_COOKIE_SECURE=false en el .env o el login nunca
+    # guardará la cookie y el usuario quedará en un bucle de "Debes iniciar
+    # sesión para continuar".
+    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "true").lower() == "true"
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
 
